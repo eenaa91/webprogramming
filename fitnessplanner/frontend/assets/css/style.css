@@ -87,7 +87,7 @@ footer {
   font-size: 1.05rem;
 }
 
-/* Hero section styling */
+/* Hero section */
 .hero-section {
   background: linear-gradient(135deg, #f8f9fa, #e9f1ff);
   border-radius: 0 0 50px 50px;
@@ -113,7 +113,6 @@ footer {
   60% { transform: translateY(-4px); }
 }
 
-/* Animation utility classes */
 .animate-fade {
   animation: fadeIn 1s ease-in-out forwards;
 }
@@ -125,7 +124,7 @@ footer {
   animation: bounce 2s infinite;
 }
 
-/* Feature cards */
+
 .feature-card {
   background: white;
   transition: all 0.3s ease;
@@ -229,16 +228,14 @@ footer {
   margin-bottom: 0;
 }
 
-/* === Nutrition Cards Image Fix === */
 .card-img-top {
-  height: 220px;            /* ista visina za sve slike */
-  object-fit: cover;        /* zadrži proporcije i izreži višak */
+  height: 220px;            
+  object-fit: cover;        
   width: 100%;
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
 
-/* Osiguraj da sve kartice budu iste visine */
 .card.h-100 {
   display: flex;
   flex-direction: column;

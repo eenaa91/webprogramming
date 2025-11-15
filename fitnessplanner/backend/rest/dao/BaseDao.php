@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../../config.php';
 
 class BaseDao {
     protected $table;
@@ -12,7 +12,7 @@ class BaseDao {
         $this->connection = Database::connect();
     }
 
-    // ✅ Dodano: omogućava pristup PDO konekciji izvana
+
     public function getConnection() {
         return $this->connection;
     }

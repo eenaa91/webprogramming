@@ -1,4 +1,6 @@
+
 <?php
+/*
 require_once 'dao/UserDao.php';
 require_once 'dao/MealPlanDao.php';
 require_once 'dao/WorkoutPlanDao.php';
@@ -57,4 +59,8 @@ try {
 } catch (PDOException $e) {
     echo "⚠️ Progress insert failed: " . $e->getMessage() . "<br>";
 }
+    */
+
+echo "Backend fercera!";
+
 ?>

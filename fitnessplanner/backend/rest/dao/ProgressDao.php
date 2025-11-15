@@ -1,13 +1,14 @@
 <?php
 require_once __DIR__ . '/BaseDao.php';
 
+
+
 class ProgressDao extends BaseDao {
 
     public function __construct() {
         parent::__construct('progress', 'progress_id');
     }
 
-    // ===== CRUD metode =====
     public function createProgress($data) {
         return parent::insert($data);
     }

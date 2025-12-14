@@ -1,5 +1,6 @@
 <section class="py-5">
   <div class="container">
+
     <h2 class="text-center mb-4">Progress Tracker</h2>
     <p class="text-center mb-5 lead">
       Track your workouts and monitor your fitness progress over time.
@@ -8,34 +9,41 @@
     <div class="row text-center mb-5">
       <div class="col-md-3 mb-3">
         <div class="card shadow-sm p-3">
-          <h5>Workouts Completed</h5>
-          <h2 class="text-primary">42</h2>
+          <h5>Total Entries</h5>
+          <h2 id="statEntries" class="text-primary">–</h2>
         </div>
       </div>
       <div class="col-md-3 mb-3">
         <div class="card shadow-sm p-3">
           <h5>Calories Burned</h5>
-          <h2 class="text-danger">12,300</h2>
+          <h2 id="statCalories" class="text-danger">–</h2>
         </div>
       </div>
       <div class="col-md-3 mb-3">
         <div class="card shadow-sm p-3">
-          <h5>Current Weight</h5>
-          <h2 class="text-success">72 kg</h2>
+          <h5>Average Weight</h5>
+          <h2 id="statWeight" class="text-success">–</h2>
         </div>
       </div>
       <div class="col-md-3 mb-3">
         <div class="card shadow-sm p-3">
-          <h5>Goal Weight</h5>
-          <h2 class="text-secondary">68 kg</h2>
+          <h5>Latest Entry</h5>
+          <h2 id="statDate" class="text-secondary">–</h2>
         </div>
       </div>
     </div>
 
     <div class="text-center mb-5">
-      <img src="assets/images/progresschart.jpg" class="img-fluid rounded shadow chart-image" alt="Progress Chart">
+      <img src="../assets/images/progresschart.jpg"
+           class="img-fluid rounded shadow"
+           alt="Progress Chart">
+      <p class="text-muted mt-2">Progress overview</p>
+    </div>
 
-      <p class="text-muted mt-2">Progress over the last 6 weeks</p>
+    <div class="text-center mb-4">
+      <button id="addProgressBtn" class="btn btn-primary">
+        Add Progress Entry
+      </button>
     </div>
 
     <div class="table-responsive">
@@ -44,18 +52,136 @@
           <tr>
             <th>Date</th>
             <th>Workout Type</th>
-            <th>Calories Burned</th>
+            <th>Calories</th>
             <th>Weight (kg)</th>
             <th>Notes</th>
+            <th>Actions</th>
           </tr>
         </thead>
-        <tbody>
-          <tr><td>2025-09-10</td><td>Full Body</td><td>350</td><td>73</td><td>Feeling stronger 💪</td></tr>
-          <tr><td>2025-09-15</td><td>Cardio</td><td>420</td><td>72.5</td><td>Great endurance today</td></tr>
-          <tr><td>2025-09-20</td><td>Leg Day</td><td>390</td><td>72.3</td><td>Sore but progressing!</td></tr>
-          <tr><td>2025-09-25</td><td>Rest</td><td>–</td><td>72.0</td><td>Good recovery</td></tr>
-        </tbody>
+        <tbody id="progressTableBody"></tbody>
       </table>
     </div>
+
   </div>
 </section>
+
+<div class="modal fade" id="progressModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="progressForm">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Add Progress Entry</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <div class="mb-3">
+            <label>Date</label>
+            <input type="date" id="logDate" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label>Workout Type</label>
+            <input type="text" id="workoutType" class="form-control">
+          </div>
+
+          <div class="mb-3">
+            <label>Calories</label>
+            <input type="number" id="calories" class="form-control">
+          </div>
+
+          <div class="mb-3">
+            <label>Weight (kg)</label>
+            <input type="number" step="0.1" id="weight" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label>Notes</label>
+            <textarea id="notes" class="form-control"></textarea>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Save</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function () {
+
+    Utils.checkAuth();
+    loadProgress();
+
+    function loadProgress() {
+
+        RestClient.get("progress", function (records) {
+
+            let html = "";
+            let totalCalories = 0;
+            let totalWeight = 0;
+
+            records.forEach(r => {
+                totalCalories += parseFloat(r.calories || 0);
+                totalWeight += parseFloat(r.weight || 0);
+
+                html += `
+                  <tr>
+                    <td>${r.log_date}</td>
+                    <td>${r.workout_type ?? "-"}</td>
+                    <td>${r.calories ?? "-"}</td>
+                    <td>${r.weight}</td>
+                    <td>${r.notes ?? "-"}</td>
+                    <td>
+                      ${Utils.isAdmin()
+                        ? `<button class="btn btn-danger btn-sm delete-btn" data-id="${r.id}">Delete</button>`
+                        : ``}
+                    </td>
+                  </tr>
+                `;
+            });
+
+            $("#progressTableBody").html(html);
+
+            $("#statEntries").text(records.length);
+            $("#statCalories").text(totalCalories);
+            $("#statWeight").text(records.length ? (totalWeight / records.length).toFixed(1) : "-");
+            $("#statDate").text(records.length ? records[records.length - 1].log_date : "-");
+        });
+    }
+
+    $("#addProgressBtn").click(() => $("#progressModal").modal("show"));
+
+    $("#progressForm").submit(function (e) {
+        e.preventDefault();
+
+        let user = Utils.getUserData();
+
+        let data = {
+            user_id: user.id,
+            log_date: $("#logDate").val(),
+            workout_type: $("#workoutType").val(),
+            calories: $("#calories").val(),
+            weight: $("#weight").val(),
+            notes: $("#notes").val()
+        };
+
+        RestClient.post("progress", data, function () {
+            $("#progressModal").modal("hide");
+            loadProgress();
+        });
+    });
+
+    $(document).on("click", ".delete-btn", function () {
+        if (!confirm("Delete entry?")) return;
+        RestClient.delete("progress/" + $(this).data("id"), loadProgress);
+    });
+
+});
+</script>

@@ -1,4 +1,3 @@
-<!-- HTML for static distribution bundle build -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -27,6 +26,7 @@
       }
     </style>
   </head>
+  
 
   <body>
     <div id="swagger-ui"></div>
@@ -34,7 +34,6 @@
     <script src="swagger-ui-standalone-preset.js"> </script>
     <script>
     window.onload = function() {
-      // Begin Swagger UI call region
       const ui = SwaggerUIBundle({
         url: "swagger.php",
         dom_id: '#swagger-ui',
@@ -48,7 +47,6 @@
         ],
         layout: "StandaloneLayout"
       })
-      // End Swagger UI call region
       window.ui = ui
     }
   </script>

@@ -1,106 +1,107 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Profile</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-
 <section class="container py-5">
   <h2 class="text-center mb-4">My Profile</h2>
   <p class="text-center mb-5 lead">View and update your personal fitness information.</p>
 
   <div class="row justify-content-center">
     <div class="col-md-6">
+
       <div class="card shadow-sm p-4">
         <div class="profile-header text-center mb-4">
-          <img src="assets/images/profilepicture.jpg" alt="Profile Picture" class="rounded-circle shadow-sm mb-3" width="120" height="120">
-          <h4>John Doe</h4>
-          <p>Fitness Enthusiast</p>
+          <img src="../assets/images/profilepicture.jpg" 
+               alt="Profile Picture" 
+               class="rounded-circle shadow-sm mb-3" 
+               width="120" height="120">
+          <h4 id="profileName">Loading...</h4>
+          <p id="profileRole"></p>
         </div>
 
         <form id="profileForm">
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Full Name</label>
+            <input id="profileFullName" type="text" class="form-control" required>
+          </div>
+
           <div class="mb-3">
             <label class="form-label fw-semibold">Email</label>
-            <input type="email" class="form-control" value="john@example.com">
+            <input id="profileEmail" type="email" class="form-control" required>
           </div>
+
           <div class="mb-3">
             <label class="form-label fw-semibold">Age</label>
-            <input type="number" class="form-control" value="28">
+            <input id="profileAge" type="number" class="form-control">
           </div>
+
           <div class="mb-3">
             <label class="form-label fw-semibold">Height (cm)</label>
-            <input type="number" class="form-control" value="178">
+            <input id="profileHeight" type="number" class="form-control">
           </div>
+
           <div class="mb-3">
             <label class="form-label fw-semibold">Weight (kg)</label>
-            <input type="number" class="form-control" value="72">
+            <input id="profileWeight" type="number" class="form-control">
           </div>
+
           <div class="text-center mt-4">
-            <button type="button" class="btn btn-primary w-100" id="saveChangesBtn">Save Changes</button>
+            <button type="submit" class="btn btn-primary w-100">Save Changes</button>
           </div>
+
         </form>
       </div>
+
     </div>
   </div>
 </section>
 
-<div id="customToast"
+<div id="profileToast"
      style="display:none; position:fixed; bottom:20px; right:20px;
             background-color:#198754; color:white; padding:12px 20px;
             border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.2);
             font-weight:500; z-index:2000; transition:opacity 0.3s ease;">
-  ✅ Changes saved successfully!
+  ✅ Profile updated successfully!
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const saveBtn = document.getElementById("saveChangesBtn");
-  const toast = document.getElementById("customToast");
+$(document).ready(function () {
 
-  if (!saveBtn) {
-    console.error("❌ Save button not found");
-    return;
-  }
+    Utils.checkAuth(); 
+    let user = Utils.getUserData();
 
-  saveBtn.addEventListener("click", () => {
-    console.log("✅ Save button clicked!");
+    $("#profileName").text(user.full_name);
+    $("#profileRole").text(user.role === "admin" ? "Administrator" : "User");
 
-    toast.style.display = "block";
-    toast.style.opacity = "1";
+    RestClient.get("users/" + user.id, function (data) {
+        $("#profileFullName").val(data.full_name);
+        $("#profileEmail").val(data.email);
+        $("#profileAge").val(data.age ?? "");
+        $("#profileHeight").val(data.height ?? "");
+        $("#profileWeight").val(data.weight ?? "");
+    });
 
-    setTimeout(() => {
-      toast.style.opacity = "0";
-      setTimeout(() => {
-        toast.style.display = "none";
-      }, 300);
-    }, 2000);
-  });
+    $("#profileForm").submit(function (e) {
+        e.preventDefault();
+
+        let updated = {
+            full_name: $("#profileFullName").val(),
+            email: $("#profileEmail").val(),
+            age: $("#profileAge").val(),
+            height: $("#profileHeight").val(),
+            weight: $("#profileWeight").val()
+        };
+
+        RestClient.put("users/" + user.id, updated, function () {
+
+            let toast = $("#profileToast");
+            toast.fadeIn(300);
+            setTimeout(() => toast.fadeOut(300), 2000);
+
+            let current = JSON.parse(localStorage.getItem("user"));
+            current.full_name = updated.full_name;
+            current.email = updated.email;
+            localStorage.setItem("user", JSON.stringify(current));
+        });
+
+    });
+
 });
 </script>
-</body>
-</html>
-
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const saveBtn = document.getElementById("saveChangesBtn");
-  const toastEl = document.getElementById("saveToast");
-
-  if (!saveBtn || !toastEl) {
-    console.error("❌ Button or toast element not found!");
-    return;
-  }
-
-  saveBtn.addEventListener("click", () => {
-    console.log("✅ Save button clicked!");
-    const toast = new bootstrap.Toast(toastEl, { delay: 2500 }); 
-    toast.show();
-  });
-});
-</script>
-
-</body>
-</html>

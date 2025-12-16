@@ -1,41 +1,7 @@
 <section class="container py-5">
   <h2 class="text-center mb-4">Workout Plans</h2>
-  <div class="row g-4">
 
-    <div class="col-md-4">
-      <div class="card shadow-sm h-100">
-        <img src="assets/images/workout1.jpg" class="card-img-top" alt="Full Body Strength">
-        <div class="card-body text-center">
-          <h5 class="fw-bold">Full Body Strength</h5>
-          <p class="text-muted">A 4-day plan designed to improve strength, mobility, and endurance.</p>
-          <button class="btn btn-primary view-btn" data-plan="strength">View Details</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="card shadow-sm h-100">
-        <img src="assets/images/workout2.jpg" class="card-img-top" alt="Cardio & HIIT">
-        <div class="card-body text-center">
-          <h5 class="fw-bold">Cardio & HIIT</h5>
-          <p class="text-muted">Burn calories fast with this 3-day cardio and HIIT program for all levels.</p>
-          <button class="btn btn-primary view-btn" data-plan="hiit">View Details</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="card shadow-sm h-100">
-        <img src="assets/images/workout3.jpg" class="card-img-top" alt="Upper Body Focus">
-        <div class="card-body text-center">
-          <h5 class="fw-bold">Upper Body Focus</h5>
-          <p class="text-muted">Target your chest, back, arms, and shoulders with this 5-day strength routine.</p>
-          <button class="btn btn-primary view-btn" data-plan="upper">View Details</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
+  <div id="workoutList" class="row g-4"></div>
 </section>
 
 <div class="modal fade" id="workoutModal" tabindex="-1" aria-labelledby="workoutModalLabel" aria-hidden="true">
@@ -43,10 +9,74 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="workoutModalLabel">Workout Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" id="workoutModalBody">
-      </div>
+      <div class="modal-body" id="workoutModalBody"></div>
     </div>
   </div>
 </div>
+
+<script>
+$(document).ready(function() {
+
+    RestClient.get("workouts", function(workouts) {
+
+        let html = "";
+
+        workouts.forEach(w => {
+            html += `
+              <div class="col-md-4">
+                <div class="card shadow-sm h-100">
+                  <img src="../assets/images/workout${Math.floor(Math.random()*3)+1}.jpg" class="card-img-top">
+                  <div class="card-body text-center">
+                    <h5 class="fw-bold">${w.title}</h5>
+                    <p class="text-muted">${w.description ?? "No description available."}</p>
+
+                    <button class="btn btn-primary view-btn" data-id="${w.id}">
+                        View Details
+                    </button>
+
+                    ${Utils.isAdmin() 
+                       ? `<button class="btn btn-danger mt-2 delete-btn" data-id="${w.id}">Delete</button>`
+                       : ``}
+                  </div>
+                </div>
+              </div>
+            `;
+        });
+
+        $("#workoutList").html(html);
+
+    });
+
+    $(document).on("click", ".view-btn", function() {
+        let id = $(this).data("id");
+
+        RestClient.get("workouts/" + id, function(w) {
+            $("#workoutModalLabel").text(w.title);
+
+            let html = `
+                <p><strong>Title:</strong> ${w.title}</p>
+                <p><strong>Description:</strong> ${w.description}</p>
+                <p><strong>Difficulty:</strong> ${w.difficulty}</p>
+                <p><strong>Duration (weeks):</strong> ${w.duration_weeks}</p>
+            `;
+
+            $("#workoutModalBody").html(html);
+            $("#workoutModal").modal("show");
+        });
+    });
+
+    $(document).on("click", ".delete-btn", function() {
+        if (!confirm("Are you sure you want to delete this workout?")) return;
+
+        let id = $(this).data("id");
+
+        RestClient.delete("workouts/" + id, function() {
+            alert("Workout deleted");
+            location.reload();
+        });
+    });
+
+});
+</script>

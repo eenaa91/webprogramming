@@ -1,0 +1,136 @@
+<div class="container py-5" id="dashboardContent"></div>
+
+<script>
+// ==========================
+//  INITIAL LOAD
+// ==========================
+
+$(document).ready(function () {
+
+    Utils.checkAuth(); // redirect if not logged in
+
+    const user = Utils.getUserData();
+
+    if (!user) {
+        $("#dashboardContent").html(`
+            <h3 class="text-center text-danger">You must log in first.</h3>
+        `);
+        return;
+    }
+
+    // Load dashboard content
+    loadDashboard(user);
+});
+
+
+// ==========================
+//  LOAD DASHBOARD
+// ==========================
+
+function loadDashboard(user) {
+
+    let html = `
+        <h2 class="fw-bold">Welcome, ${user.full_name} 👋</h2>
+        <p class="text-muted">Role: <strong>${user.role}</strong></p>
+
+        <hr>
+
+        <!-- STATISTICS -->
+        <div class="row text-center mb-5" id="statsRow">
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3">
+                    <h5>Total Progress Entries</h5>
+                    <h2 id="statProgress" class="text-primary">...</h2>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3">
+                    <h5>Average Weight (kg)</h5>
+                    <h2 id="statWeight" class="text-success">...</h2>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3">
+                    <h5>Calories Logged</h5>
+                    <h2 id="statCalories" class="text-danger">...</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANELS -->
+        ${Utils.isAdmin() ? adminPanelHTML() : userPanelHTML()}
+    `;
+
+    $("#dashboardContent").html(html);
+
+    // Load statistics via AJAX
+    loadStatistics(user.id);
+}
+
+
+// ==========================
+//  USER PANEL (REGULAR USER)
+// ==========================
+
+function userPanelHTML() {
+    return `
+        <h3 class="mt-4">Your Fitness Options</h3>
+        <ul class="list-group">
+            <li class="list-group-item"><a href="#progress">📈 View Your Progress</a></li>
+            <li class="list-group-item"><a href="#workout">💪 Workout Plans</a></li>
+            <li class="list-group-item"><a href="#nutrition">🥗 Nutrition Plans</a></li>
+            <li class="list-group-item"><a href="#profile">👤 Profile</a></li>
+        </ul>
+    `;
+}
+
+
+// ==========================
+//  ADMIN PANEL (ROLE: ADMIN)
+// ==========================
+
+function adminPanelHTML() {
+    return `
+        <h3 class="mt-4">Admin Panel</h3>
+        <div class="list-group">
+            <a href="#admin-workouts" class="list-group-item list-group-item-action">🏋️ Manage Workouts</a>
+            <a href="#admin-mealplans" class="list-group-item list-group-item-action">🥗 Manage Meal Plans</a>
+            <a href="#admin-users" class="list-group-item list-group-item-action">👥 Manage Users</a>
+            <a href="#progress" class="list-group-item list-group-item-action">📊 View All Progress Entries</a>
+        </div>
+    `;
+}
+
+
+// ==========================
+//  LOAD STATISTICS (AJAX)
+// ==========================
+
+function loadStatistics(user_id) {
+    RestClient.get("progress", function(progressList) {
+
+        // filter progress by user
+        let entries = progressList.filter(p => p.user_id == user_id);
+
+        if (entries.length === 0) {
+            $("#statProgress").text("0");
+            $("#statWeight").text("-");
+            $("#statCalories").text("0");
+            return;
+        }
+
+        $("#statProgress").text(entries.length);
+
+        let avgWeight = (entries.reduce((sum, p) => sum + parseFloat(p.weight), 0) / entries.length)
+                        .toFixed(1);
+
+        $("#statWeight").text(avgWeight + " kg");
+
+        let totalCalories = entries.reduce((sum, p) => sum + (parseFloat(p.calories) || 0), 0);
+
+        $("#statCalories").text(totalCalories);
+    });
+}
+</script>

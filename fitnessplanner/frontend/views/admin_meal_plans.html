@@ -1,0 +1,154 @@
+<section class="container py-4">
+    <h2 class="fw-bold mb-4">🥗 Manage Meal Plans</h2>
+
+    <button class="btn btn-primary mb-3" onclick="MealPlanAdmin.openAddModal()">
+        ➕ Add Meal Plan
+    </button>
+
+    <table id="mealplansTable" class="table table-striped table-bordered"></table>
+</section>
+
+<div class="modal fade" id="mealplanModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            
+            <div class="modal-header">
+                <h5 class="modal-title" id="mealplanModalTitle"></h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="mealplanForm">
+                    <input type="hidden" id="meal_id">
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Title</label>
+                        <input type="text" class="form-control" id="title" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Type</label>
+                        <input type="text" class="form-control" id="type" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Calories</label>
+                        <input type="number" class="form-control" id="calories">
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Description</label>
+                        <textarea class="form-control" id="description"></textarea>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-success" onclick="MealPlanAdmin.save()">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+let MealPlanAdmin = {
+
+    table: null,
+
+    init: function() {
+        RestClient.get("mealplans", function(data) {
+            MealPlanAdmin.renderTable(data);
+        });
+    },
+
+    renderTable: function(data) {
+        let columns = [
+            { title: "ID", data: "meal_id" },
+            { title: "Title", data: "title" },
+            { title: "Type", data: "type" },
+            { title: "Calories", data: "calories" },
+            { title: "Description", data: "description" },
+            {
+                title: "Actions",
+                data: "meal_id",
+                render: function(id, type, row) {
+                    return `
+                        <button class="btn btn-warning btn-sm" onclick="MealPlanAdmin.openEditModal(${id})">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="MealPlanAdmin.delete(${id})">🗑️ Delete</button>
+                    `;
+                }
+            }
+        ];
+
+        Utils.datatable("mealplansTable", columns, data);
+    },
+
+    openAddModal: function() {
+        $("#mealplanModalTitle").text("Add Meal Plan");
+        $("#mealplanForm")[0].reset();
+        $("#meal_id").val("");
+        new bootstrap.Modal("#mealplanModal").show();
+    },
+
+    openEditModal: function(id) {
+        RestClient.get("mealplans/" + id, function(data) {
+
+            $("#mealplanModalTitle").text("Edit Meal Plan");
+
+            $("#meal_id").val(data.meal_id);
+            $("#title").val(data.title);
+            $("#type").val(data.type);
+            $("#calories").val(data.calories);
+            $("#description").val(data.description);
+
+            new bootstrap.Modal("#mealplanModal").show();
+        });
+    },
+
+    save: function() {
+        let id = $("#meal_id").val();
+
+        let entity = {
+            title: $("#title").val(),
+            type: $("#type").val(),
+            calories: $("#calories").val(),
+            description: $("#description").val()
+        };
+
+        if (id) {
+            RestClient.put("mealplans/" + id, JSON.stringify(entity), function() {
+                toastr.success("Meal plan updated!");
+                MealPlanAdmin.reload();
+            });
+        } else {
+            RestClient.post("mealplans", JSON.stringify(entity), function() {
+                toastr.success("Meal plan created!");
+                MealPlanAdmin.reload();
+            });
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById("mealplanModal")).hide();
+    },
+
+    delete: function(id) {
+        if (!confirm("Are you sure you want to delete this meal plan?")) return;
+
+        RestClient.delete("mealplans/" + id, function() {
+            toastr.success("Meal plan deleted!");
+            MealPlanAdmin.reload();
+        });
+    },
+
+    reload: function() {
+        RestClient.get("mealplans", function(data) {
+            MealPlanAdmin.renderTable(data);
+        });
+    }
+};
+
+$(document).ready(function() {
+    MealPlanAdmin.init();
+});
+</script>

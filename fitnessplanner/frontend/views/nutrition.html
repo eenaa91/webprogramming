@@ -6,10 +6,9 @@
 
   <div class="row g-4">
 
-
     <div class="col-md-4">
       <div class="card shadow-lg border-0 rounded-4 h-100 text-center">
-        <img src="assets/images/meal1.jpg" class="card-img-top rounded-top-4" alt="High Protein Plan">
+        <img src="../assets/images/meal1.jpg" class="card-img-top rounded-top-4" alt="High Protein Plan">
         <div class="card-body">
           <h5 class="fw-bold">High Protein Plan</h5>
           <p class="text-muted">Perfect for building muscle — includes chicken, eggs, Greek yogurt, and legumes.</p>
@@ -22,7 +21,7 @@
 
     <div class="col-md-4">
       <div class="card shadow-lg border-0 rounded-4 h-100 text-center">
-        <img src="assets/images/meal2.jpg" class="card-img-top rounded-top-4" alt="Balanced Diet Plan">
+        <img src="../assets/images/meal2.jpg" class="card-img-top rounded-top-4" alt="Balanced Diet Plan">
         <div class="card-body">
           <h5 class="fw-bold">Balanced Diet Plan</h5>
           <p class="text-muted">A mix of proteins, carbs, and fats for optimal energy balance and overall health.</p>
@@ -35,7 +34,7 @@
 
     <div class="col-md-4">
       <div class="card shadow-lg border-0 rounded-4 h-100 text-center">
-        <img src="assets/images/meal3.jpg" class="card-img-top rounded-top-4" alt="Vegan Energy Plan">
+        <img src="../assets/images/meal3.jpg" class="card-img-top rounded-top-4" alt="Vegan Energy Plan">
         <div class="card-body">
           <h5 class="fw-bold">Vegan Energy Plan</h5>
           <p class="text-muted">100% plant-based plan rich in fiber, nuts, seeds, and essential vitamins.</p>
@@ -54,10 +53,59 @@
     <div class="modal-content rounded-4 shadow">
       <div class="modal-header bg-primary text-white rounded-top-4">
         <h5 class="modal-title fw-bold" id="nutritionModalLabel"></h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body" id="nutritionModalBody"></div>
-
     </div>
   </div>
 </div>
+
+<script>
+$(document).on("click", ".nutrition-btn", function () {
+
+    const plan = $(this).data("plan");
+
+    let title = "";
+    let body = "";
+
+    if (plan === "protein") {
+        title = "High Protein Plan";
+        body = `
+          <ul>
+            <li>🍗 Chicken & eggs</li>
+            <li>🥛 Greek yogurt</li>
+            <li>🥜 Legumes</li>
+            <li>💪 Ideal for muscle growth</li>
+          </ul>
+        `;
+    }
+
+    if (plan === "balanced") {
+        title = "Balanced Diet Plan";
+        body = `
+          <ul>
+            <li>🥑 Healthy fats</li>
+            <li>🍚 Complex carbs</li>
+            <li>🥩 Lean protein</li>
+            <li>⚖️ Energy balance</li>
+          </ul>
+        `;
+    }
+
+    if (plan === "vegan") {
+        title = "Vegan Energy Plan";
+        body = `
+          <ul>
+            <li>🥬 Plant-based meals</li>
+            <li>🌰 Nuts & seeds</li>
+            <li>🌾 High fiber</li>
+            <li>🌱 Sustainable nutrition</li>
+          </ul>
+        `;
+    }
+
+    $("#nutritionModalLabel").text(title);
+    $("#nutritionModalBody").html(body);
+    $("#nutritionModal").modal("show");
+});
+</script>

@@ -1,0 +1,152 @@
+<section class="container py-4">
+    <h2 class="fw-bold mb-4">🏋️ Manage Workout Plans</h2>
+
+    <button class="btn btn-primary mb-3" onclick="WorkoutAdmin.openAddModal()">
+        ➕ Add Workout Plan
+    </button>
+
+    <table id="workoutsTable" class="table table-striped table-bordered"></table>
+</section>
+
+<div class="modal fade" id="workoutModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            
+            <div class="modal-header">
+                <h5 class="modal-title" id="workoutModalTitle"></h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="workoutForm">
+                    <input type="hidden" id="plan_id">
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Title</label>
+                        <input type="text" class="form-control" id="title" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Description</label>
+                        <textarea class="form-control" id="description"></textarea>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Difficulty</label>
+                        <input type="text" class="form-control" id="difficulty" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Duration (weeks)</label>
+                        <input type="number" class="form-control" id="duration_weeks">
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-success" onclick="WorkoutAdmin.save()">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+let WorkoutAdmin = {
+
+    init: function() {
+        RestClient.get("workouts", function(data) {
+            WorkoutAdmin.renderTable(data);
+        });
+    },
+
+    renderTable: function(data) {
+        let columns = [
+            { title: "ID", data: "plan_id" },
+            { title: "Title", data: "title" },
+            { title: "Description", data: "description" },
+            { title: "Difficulty", data: "difficulty" },
+            { title: "Weeks", data: "duration_weeks" },
+            {
+                title: "Actions",
+                data: "plan_id",
+                render: function(id, type, row) {
+                    return `
+                        <button class="btn btn-warning btn-sm" onclick="WorkoutAdmin.openEditModal(${id})">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="WorkoutAdmin.delete(${id})">🗑️ Delete</button>
+                    `;
+                }
+            }
+        ];
+
+        Utils.datatable("workoutsTable", columns, data);
+    },
+
+    openAddModal: function() {
+        $("#workoutModalTitle").text("Add Workout Plan");
+        $("#workoutForm")[0].reset();
+        $("#plan_id").val("");
+        new bootstrap.Modal("#workoutModal").show();
+    },
+
+    openEditModal: function(id) {
+        RestClient.get("workouts/" + id, function(data) {
+
+            $("#workoutModalTitle").text("Edit Workout Plan");
+
+            $("#plan_id").val(data.plan_id);
+            $("#title").val(data.title);
+            $("#description").val(data.description);
+            $("#difficulty").val(data.difficulty);
+            $("#duration_weeks").val(data.duration_weeks);
+
+            new bootstrap.Modal("#workoutModal").show();
+        });
+    },
+
+    save: function() {
+        let id = $("#plan_id").val();
+
+        let entity = {
+            title: $("#title").val(),
+            description: $("#description").val(),
+            difficulty: $("#difficulty").val(),
+            duration_weeks: $("#duration_weeks").val()
+        };
+
+        if (id) {
+            RestClient.put("workouts/" + id, JSON.stringify(entity), function() {
+                toastr.success("Workout updated!");
+                WorkoutAdmin.reload();
+            });
+        } else {
+            RestClient.post("workouts", JSON.stringify(entity), function() {
+                toastr.success("Workout created!");
+                WorkoutAdmin.reload();
+            });
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById("workoutModal")).hide();
+    },
+
+    delete: function(id) {
+        if (!confirm("Are you sure you want to delete this workout plan?")) return;
+
+        RestClient.delete("workouts/" + id, function() {
+            toastr.success("Workout deleted!");
+            WorkoutAdmin.reload();
+        });
+    },
+
+    reload: function() {
+        RestClient.get("workouts", function(data) {
+            WorkoutAdmin.renderTable(data);
+        });
+    }
+};
+
+$(document).ready(function() {
+    WorkoutAdmin.init();
+});
+</script>

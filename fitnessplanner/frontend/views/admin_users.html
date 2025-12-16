@@ -1,0 +1,170 @@
+<section class="container py-4">
+    <h2 class="fw-bold mb-4">👥 Manage Users</h2>
+
+    <button class="btn btn-primary mb-3" onclick="UsersAdmin.openAddModal()">
+        ➕ Add User
+    </button>
+
+    <table id="usersTable" class="table table-striped table-bordered"></table>
+</section>
+
+
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalTitle"></h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="userForm">
+                    <input type="hidden" id="user_id">
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Full Name</label>
+                        <input type="text" class="form-control" id="full_name" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Email</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Password (leave empty if not changing)</label>
+                        <input type="password" class="form-control" id="password">
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Role</label>
+                        <select id="role" class="form-select">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-semibold">Meal Plan ID (optional)</label>
+                        <input type="number" class="form-control" id="meal_id">
+                    </div>
+
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-success" onclick="UsersAdmin.save()">Save</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+let UsersAdmin = {
+
+    init: function () {
+        RestClient.get("users", function (data) {
+            UsersAdmin.renderTable(data);
+        });
+    },
+
+    renderTable: function (data) {
+
+        let columns = [
+            { title: "ID", data: "id" },
+            { title: "Name", data: "full_name" },
+            { title: "Email", data: "email" },
+            { title: "Role", data: "role" },
+            { title: "Meal ID", data: "meal_id" },
+            {
+                title: "Actions",
+                data: "id",
+                render: function (id, type, row) {
+                    return `
+                        <button class="btn btn-warning btn-sm" onclick="UsersAdmin.openEditModal(${id})">✏️ Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="UsersAdmin.delete(${id})">🗑️ Delete</button>
+                    `;
+                }
+            }
+        ];
+
+        Utils.datatable("usersTable", columns, data);
+    },
+
+    openAddModal: function () {
+        $("#userModalTitle").text("Add User");
+        $("#userForm")[0].reset();
+        $("#user_id").val("");
+        new bootstrap.Modal("#userModal").show();
+    },
+
+    openEditModal: function (id) {
+
+        RestClient.get("users/" + id, function (data) {
+
+            $("#userModalTitle").text("Edit User");
+
+            $("#user_id").val(data.id);
+            $("#full_name").val(data.full_name);
+            $("#email").val(data.email);
+            $("#role").val(data.role);
+            $("#meal_id").val(data.meal_id);
+
+            new bootstrap.Modal("#userModal").show();
+        });
+    },
+
+    save: function () {
+        let id = $("#user_id").val();
+
+        let entity = {
+            full_name: $("#full_name").val(),
+            email: $("#email").val(),
+            role: $("#role").val(),
+            meal_id: $("#meal_id").val()
+        };
+
+        let password = $("#password").val();
+        if (password.trim() !== "") entity.password = password;
+
+        if (id) {
+            RestClient.put("users/" + id, JSON.stringify(entity), function () {
+                toastr.success("User updated!");
+                UsersAdmin.reload();
+            });
+        } else {
+            RestClient.post("users", JSON.stringify(entity), function () {
+                toastr.success("User created!");
+                UsersAdmin.reload();
+            });
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById("userModal")).hide();
+    },
+
+    delete: function (id) {
+        if (!confirm("Are you sure you want to delete this user?")) return;
+
+        RestClient.delete("users/" + id, function () {
+            toastr.success("User deleted!");
+            UsersAdmin.reload();
+        });
+    },
+
+    reload: function () {
+        RestClient.get("users", function (data) {
+            UsersAdmin.renderTable(data);
+        });
+    }
+};
+
+
+$(document).ready(function () {
+    UsersAdmin.init();
+});
+</script>

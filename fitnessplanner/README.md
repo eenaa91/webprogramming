@@ -60,3 +60,94 @@ User Plans – Connects users to multiple workout plans (many-to-many relationsh
 
 The ERD diagram for this project is available in the `assets/` folder.
 
+Authentication and Authorization
+
+The application implements authentication and authorization using JSON Web Tokens (JWT).
+
+Users can register and log in through the authentication API.
+
+Passwords are securely hashed on the backend.
+
+After successful login, a JWT token is generated and returned to the frontend.
+
+The token is stored in the browser (localStorage) and sent with each protected API request.
+
+Role-based authorization is implemented:
+
+Admin users can perform full CRUD operations on all entities.
+
+Regular users have restricted access (e.g. read-only access or limited actions).
+
+Authentication and authorization logic is implemented using middleware on the backend.
+
+Backend Architecture
+
+The backend is implemented using the FlightPHP framework and follows a layered architecture:
+
+DAO (Data Access Objects) – handle direct database queries using PDO.
+
+Services – contain business logic and data validation.
+
+Routes – define REST API endpoints and connect HTTP requests to services.
+
+Middleware – handles authentication, authorization, and request validation.
+
+REST API and CRUD Operations
+
+The backend exposes a REST API that supports full CRUD operations using standard HTTP methods:
+
+GET – retrieve data
+
+POST – create new records
+
+PUT/PATCH – update existing records
+
+DELETE – remove records
+
+AJAX requests are used on the frontend to communicate with the backend API.
+
+API Documentation (Swagger / OpenAPI)
+
+The API is documented using OpenAPI (Swagger) annotations.
+
+Each API endpoint is documented with annotations for paths, parameters, and responses.
+
+Swagger documentation is generated automatically by scanning the route files.
+
+The documentation provides an overview of available endpoints and their usage.
+
+Frontend MVC Structure
+
+The frontend is implemented as a Single Page Application (SPA) and follows an MVC-style structure:
+
+Views – HTML templates loaded dynamically using SPA routing.
+
+Services – JavaScript files that handle API communication.
+
+RestClient – central utility for sending AJAX requests (GET, POST, PUT, DELETE).
+
+Utils – helper functions for authentication and role checks.
+
+This structure ensures separation of concerns and easier maintenance.
+
+Frontend Validation and Security
+
+Basic frontend validation is implemented using:
+
+HTML validation attributes (required, email type)
+
+JavaScript checks before submitting forms
+
+Backend validation is implemented inside service methods to ensure data integrity and security.
+
+Deployment
+
+The application is prepared for deployment.
+
+The frontend can be deployed as a static application (e.g. GitHub Pages).
+
+The backend is configured to run on a hosted environment with a MySQL database.
+
+Database connection settings are managed through the configuration file.
+
+Due to configuration and environment constraints, the project was tested locally using XAMPP.
